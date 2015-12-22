@@ -797,10 +797,16 @@ static inline int priv_usch_cmd_arr(struct priv_usch_stash_item **pp_in,
 
     if (ustreq(pp_argv[0], "cd"))
     {
-        if (pp_argv[1] == NULL)
-            chdir(getenv("HOME"));
+        struct stat sb;
+	if (stat(pp_argv[1], &sb) == 0 || pp_argv[1] == NULL)
+	{
+            if (pp_argv[1] == NULL)
+	        chdir(getenv("HOME"));
+            else
+	        chdir(pp_argv[1]);
+	}
         else
-            chdir(pp_argv[1]);
+           fprintf(stderr, "usch: cd: %s: No such file or directory\n", pp_argv[1]);
     }
     else
     {
@@ -892,7 +898,7 @@ STDIN --> O --> O --> O --> STDOUT
 
         if (execvp((const char*)(pp_argv[0]), (char**)pp_argv) == -1)
         {
-            fprintf(stderr, "execv failed!\n");
+            fprintf(stderr, "usch: %s: command not found\n", pp_argv[0]);
             _exit(EXIT_FAILURE); // If child fails
         }
     }
